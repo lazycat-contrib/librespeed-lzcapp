@@ -32,6 +32,14 @@ jobs:
           docker restart librespeed
           curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 2 --max-time 10 http://127.0.0.1:18080/backend/empty.php -o restarted.bin
           test ! -s restarted.bin
+      - name: Failed-check diagnostics
+        if: failure()
+        run: |
+          docker inspect --format "{{.State.Status}} {{.State.ExitCode}}" librespeed || true
+          docker logs --tail 35 librespeed || true
+          if [ -f index.html ]; then grep -ioE "<title>[^<]*" index.html || true; wc -c index.html; fi
+          for f in ping.bin download.bin upload-response.bin restarted.bin; do if [ -f "$f" ]; then wc -c "$f"; fi; done
+          if [ -f download.headers ]; then cat download.headers; fi
       - name: Remove test container
         if: always()
         run: docker rm -f librespeed
