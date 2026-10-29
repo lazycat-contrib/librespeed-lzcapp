@@ -1,0 +1,44 @@
+name: Verify and build LibreSpeed
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start pinned upstream in private standalone mode
+        run: |
+          docker run --detach --name librespeed --publish 127.0.0.1:18080:8080 --env MODE=standalone --env TITLE=LibreSpeed --env TELEMETRY=false --env DISABLE_IPINFO=true --env PASSWORD= --env WEBPORT=8080 ghcr.io/librespeed/speedtest:6.3.1@sha256:bc34bf69b6c102b23ab81b6e77beb7cce321fb0d3be33ec6e80edef3e9dd8bab
+      - name: Verify frontend, download, upload and ping endpoints
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 2 --max-time 10 http://127.0.0.1:18080/ -o index.html
+          grep -qi LibreSpeed index.html
+          curl --fail --silent --show-error --max-time 10 http://127.0.0.1:18080/backend/empty.php -o ping.bin
+          test ! -s ping.bin
+          curl --fail --silent --show-error --max-time 20 --dump-header download.headers 'http://127.0.0.1:18080/backend/garbage.php?ckSize=1' -o download.bin
+          test "$(wc -c < download.bin)" -eq 1048576
+          grep -qi 'Cache-Control:.*no-store' download.headers
+          curl --fail --silent --show-error --max-time 20 --request POST --data-binary @download.bin http://127.0.0.1:18080/backend/empty.php -o upload-response.bin
+          test ! -s upload-response.bin
+          status=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:18080/results/stats.php)
+          case "$status" in 403|404) ;; *) echo 'Unexpected accessible statistics endpoint'; exit 1 ;; esac
+          echo 'Frontend and bounded 1 MiB transfer endpoints verified; telemetry statistics are not exposed.'
+      - name: Verify stateless restart
+        run: |
+          set -euo pipefail
+          docker restart librespeed
+          curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 2 --max-time 10 http://127.0.0.1:18080/backend/empty.php -o restarted.bin
+          test ! -s restarted.bin
+      - name: Remove test container
+        if: always()
+        run: docker rm -f librespeed
+  lazycat:
+    needs: smoke
+    uses: ca-x/lazycat-github-action/.github/workflows/lazycat.yml@v1
+    with:
+      operation: auto
+      config: .github/lazycat-action.yml
+      versioned-release-asset: true

@@ -1,0 +1,15 @@
+package: community.lazycat.app.librespeed
+version: 6.3.1
+name: LibreSpeed
+description: Browser-based speed test for the connection between your device and this server.
+min_os_version: "1.5.0"
+homepage: https://github.com/librespeed/speedtest
+author: LibreSpeed
+license: LGPL-3.0-or-later
+locales:
+  zh:
+    name: LibreSpeed
+    description: 在浏览器中测试当前设备到微服的下载、上传和延迟，不等同于微服的公网带宽。
+  en:
+    name: LibreSpeed
+    description: Browser-based speed test for the connection between your device and this server.

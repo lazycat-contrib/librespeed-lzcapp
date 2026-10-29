@@ -1,0 +1,28 @@
+application:
+  subdomain: librespeed
+  multi_instance: false
+  upstreams:
+    - location: /
+      backend: http://librespeed:8080/
+services:
+  librespeed:
+    # upstream: ghcr.io/librespeed/speedtest:6.3.1
+    image: ghcr.1ms.run/librespeed/speedtest:6.3.1
+    environment:
+      - MODE=standalone
+      - TITLE=LibreSpeed
+      - TELEMETRY=false
+      - DISABLE_IPINFO=true
+      - PASSWORD=
+      - WEBPORT=8080
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+usage: |
+  LibreSpeed 测试当前浏览器到本微服实例之间的链路。公网代理、VPN、网络拥塞和懒猫网关都会影响结果。
+  它不是在微服上执行的互联网出口测速工具，不能把结果直接当成微服公网带宽。
+  本包关闭测速记录、统计后台和外部 IP 信息查询，不需要数据库，也不会持久保存测速历史。
+  入口保留懒猫登录保护，不附加文件选择器拦截。测速会消耗网络流量。

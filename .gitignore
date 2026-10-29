@@ -1,0 +1,5 @@
+dist/
+*.lpk
+index.html
+*.bin
+download.headers
