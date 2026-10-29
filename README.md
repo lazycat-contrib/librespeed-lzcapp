@@ -13,3 +13,9 @@ The workflow tests the exact upstream image on a GitHub runner: frontend HTTP re
 This measures the connection between the browser and this server. A proxy, VPN or LazyCat gateway changes that path and can affect measured throughput. It is not a speed test initiated from the NAS to a public server.
 
 LazyCat-device installation, browser measurement UI and gateway performance have not been end-to-end tested. Do not describe the runner tests as real-device validation.
+
+## Verified community release
+
+LibreSpeed 6.3.1 was published as MiaoMiao app 655, APPROVED, Network category (18). Actions run 40835614596 passed both endpoint smoke and LPK build. The 57856-byte Release asset SHA256 is `67377a6f95f68227b05be1322ab5b363eb3d151eff7f0e4819f9222a773f6857`, independently verified after download. Both automatic store publishers remain disabled; this release was submitted using the verified remote-LPK URL.
+
+The first test used curl default form encoding for a binary payload, causing PHP form-parser warnings; the corrected check omits Content-Type, matching upstream browser upload behavior. Endpoint and restart checks subsequently passed.
